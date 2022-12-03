@@ -232,6 +232,8 @@ def clear_rows(grid, locked):
             if y < ind:
                 newKey = (x, y + inc)
                 locked[newKey] = locked.pop(key)
+
+    return inc
  
  
 def draw_next_shape(shape, surface):
@@ -251,7 +253,7 @@ def draw_next_shape(shape, surface):
     surface.blit(label, (sx + 10, sy- 30))
  
  
-def draw_window(surface):
+def draw_window(surface, grid, score=0):
     surface.fill((0,0,0))
     # Tetris Title
     font = pygame.font.SysFont('arial', 60)
@@ -259,6 +261,14 @@ def draw_window(surface):
  
     surface.blit(label, (top_left_x + play_width / 2 - (label.get_width() / 2), 30))
  
+    font = pygame.font.SysFont('arial', 30)
+    label = font.render('Score' + str(score), 1, (255,255,255))
+ 
+    sx = top_left_x + play_width + 50
+    sy = top_left_y + play_height/2 - 100
+
+    surface.blit(label, (sx + 25, sy + 150))
+
     for i in range(len(grid)):
         for j in range(len(grid[i])):
             pygame.draw.rect(surface, grid[i][j], (top_left_x + j* 30, top_left_y + i * 30, 30, 30), 0)
@@ -281,13 +291,23 @@ def main():
     next_piece = get_shape()
     clock = pygame.time.Clock()
     fall_time = 0
+    fall_speed = 0.27
+    level_time = 0
+    score = 0
  
     while run:
         fall_speed = 0.27
  
         grid = create_grid(locked_positions)
         fall_time += clock.get_rawtime()
+        level_time += clock.get_rawtime()
         clock.tick()
+
+        if level_time/1000 > 5:
+            level_time = 0
+            if level_time > 0.1:
+                fall_speed += 0.002
+                level_time -= 0.005
  
         # PIECE FALLING CODE
         if fall_time/1000 >= fall_speed:
@@ -349,9 +369,10 @@ def main():
             change_piece = False
  
             # call four times to check for multiple clear rows
-            clear_rows(grid, locked_positions)
+            score += clear_rows(grid, locked_positions) * 100
+            
  
-        draw_window(win)
+        draw_window(win, grid, score)
         draw_next_shape(next_piece, win)
         pygame.display.update()
  
@@ -361,7 +382,7 @@ def main():
  
     draw_text_middle("You Lost", 40, (255,255,255), win)
     pygame.display.update()
-    pygame.time.delay(2000)
+    pygame.time.delay(3000)
  
  
 def main_menu():
